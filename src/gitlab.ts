@@ -1,0 +1,177 @@
+import axios from 'axios';
+import inquirer from 'inquirer';
+import path from 'path';
+import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import {
+  cloneRepo,
+  createAndCheckoutBranch,
+  commitToCurrenctBranch,
+  pushBranch,
+  branchExists,
+} from './git';
+import { DataObject } from './types';
+
+const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
+const GITLAB_TOKEN = 'glpat-eGgk6ES_ETQk8jqdHnJQ';
+const TEMP_REPO_DIR = '/tmp/faktoora-bump';
+
+export async function getRepositories() {
+  const response = await axios.get(
+    `${GITLAB_API_BASE_URL}/projects?membership=true&per_page=1000`,
+    {
+      headers: {
+        'PRIVATE-TOKEN': GITLAB_TOKEN,
+      },
+    },
+  );
+
+  return response.data;
+}
+
+export async function createMergeRequest(
+  repo: DataObject,
+  branch: string,
+  commitMessage: string,
+) {
+  await axios.post(
+    `${GITLAB_API_BASE_URL}/projects/${repo.id}/merge_requests`,
+    {
+      source_branch: branch,
+      target_branch: repo.default_branch,
+      title: commitMessage,
+      description: `Automated bump of ${commitMessage}`,
+    },
+    {
+      headers: {
+        'PRIVATE-TOKEN': GITLAB_TOKEN,
+      },
+    },
+  );
+}
+
+const filterProjectByPackageName = async (
+  packageName: string,
+  branch: string = 'master',
+) => {
+  const allRepos = await getRepositories();
+  const ids = allRepos.map((repo: DataObject) => repo.id);
+  const allRepoGroupById = allRepos.reduce(
+    (acc: DataObject, repo: DataObject) => {
+      acc[repo.id] = repo;
+      return acc;
+    },
+    {},
+  );
+
+  const projectsHasThePackage = await Promise.all(
+    ids.map(async (id: string) => {
+      try {
+        const response = await axios.get(
+          `${GITLAB_API_BASE_URL}/projects/${id}/repository/files/package.json/raw?ref=${branch}`,
+          {
+            headers: {
+              'PRIVATE-TOKEN': GITLAB_TOKEN,
+            },
+          },
+        );
+        const packageJson = response.data;
+        if (packageJson.dependencies && packageJson.dependencies[packageName]) {
+          return {
+            id,
+            packageDetail: {
+              name: packageName,
+              version: packageJson.dependencies[packageName],
+            },
+            ...allRepoGroupById[id],
+          };
+        }
+
+        return null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return projectsHasThePackage.filter((v) => !!v);
+};
+
+async function runNpmInstall(
+  localPath: string,
+  packageName: string,
+  version: string,
+) {
+  execSync(`npm i ${packageName}@${version} --package-lock-only`, {
+    cwd: localPath,
+  });
+}
+
+export async function updatePackageInRepos(
+  packageName: string,
+  version: string,
+) {
+  console.log(`Finding repositories using the "${packageName}" ...`);
+  const repos = await filterProjectByPackageName(packageName);
+
+  if (!repos?.length) {
+    console.log(`No repositories found using the "${packageName}"`);
+    return;
+  }
+
+  const { selectedRepos } = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'selectedRepos',
+      message: 'Select repositories to update:',
+      choices: repos.map((repo) => ({
+        name: `${repo.name}${repo.packageDetail.version.replace(/^[\^~]/, '') === version ? ' - up to date' : ''}`,
+        value: repo,
+        // checked: true,
+      })),
+    },
+  ] as any);
+
+  const localPaths = [];
+  if (existsSync(TEMP_REPO_DIR)) execSync(`rm -rf ${TEMP_REPO_DIR}`);
+  try {
+    for (const repo of selectedRepos) {
+      const localPath = path.join(TEMP_REPO_DIR, repo.name);
+      localPaths.push(localPath);
+
+      console.log(`Cloning ${repo.ssh_url_to_repo}...`);
+      await cloneRepo(repo.ssh_url_to_repo, localPath);
+
+      const branchName = `bump_${packageName}-${version}`;
+      const exists = await branchExists(localPath, branchName);
+      if (exists) {
+        console.warn(
+          `Branch "${branchName}" already exists in ${repo.name}.\nSkipping...`,
+        );
+        continue;
+      }
+
+      console.log(`Creating branch "${branchName}" ...`);
+      await createAndCheckoutBranch(localPath, branchName);
+
+      console.log(`Installing ${packageName}@${version} ...`);
+      await runNpmInstall(localPath, packageName, version);
+
+      console.log(`Committing changes...`);
+      await commitToCurrenctBranch(localPath, `Bump ${packageName}@${version}`);
+
+      console.log(`Pushing changes...`);
+      await pushBranch(localPath, branchName);
+      // await createMergeRequest(repo, branchName, `Bump ${packageName}@${version}`);
+    }
+
+    console.log(`Bump ${packageName}@${version} done!`);
+  } catch (e) {
+    console.error(e);
+  } finally {
+    console.log(`Cleaning up...`);
+    localPaths.forEach(
+      (localPath) => existsSync(localPath) && execSync(`rm -rf ${localPath}`),
+    );
+  }
+}
