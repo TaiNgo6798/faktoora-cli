@@ -1,5 +1,5 @@
 {
-  "name": "faktoora-cli",
+  "name": "@faktoora/faktoora-cli",
   "version": "1.0.0",
   "bin": {
     "faktoora": "dist/index.js"
