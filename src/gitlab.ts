@@ -11,17 +11,17 @@ import {
   branchExists,
 } from './git';
 import { DataObject } from './types';
+import { getGitlabToken } from './utils';
 
-const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
-const GITLAB_TOKEN = 'glpat-eGgk6ES_ETQk8jqdHnJQ';
 const TEMP_REPO_DIR = '/tmp/faktoora-bump';
+const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
 
 export async function getRepositories() {
   const response = await axios.get(
     `${GITLAB_API_BASE_URL}/projects?membership=true&per_page=1000`,
     {
       headers: {
-        'PRIVATE-TOKEN': GITLAB_TOKEN,
+        'PRIVATE-TOKEN': getGitlabToken(),
       },
     },
   );
@@ -44,7 +44,7 @@ export async function createMergeRequest(
     },
     {
       headers: {
-        'PRIVATE-TOKEN': GITLAB_TOKEN,
+        'PRIVATE-TOKEN': getGitlabToken(),
       },
     },
   );
@@ -71,7 +71,7 @@ const filterProjectByPackageName = async (
           `${GITLAB_API_BASE_URL}/projects/${id}/repository/files/package.json/raw?ref=${branch}`,
           {
             headers: {
-              'PRIVATE-TOKEN': GITLAB_TOKEN,
+              'PRIVATE-TOKEN': getGitlabToken(),
             },
           },
         );
