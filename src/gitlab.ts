@@ -32,19 +32,31 @@ export async function getRepositories() {
   return response.data;
 }
 
+export const getMe = async () => {
+  const response = await axios.get(`${GITLAB_API_BASE_URL}/user`, {
+    headers: {
+      'PRIVATE-TOKEN': getGitlabToken(),
+    },
+  });
+  return response.data as DataObject;
+};
+
 export async function createMergeRequest(
   repo: DataObject,
   branch: string,
   commitMessage: string,
 ) {
+  const me = await getMe();
+
   await axios.post(
     `${GITLAB_API_BASE_URL}/projects/${repo.id}/merge_requests`,
     {
       source_branch: branch,
       target_branch: repo.default_branch,
       title: commitMessage,
-      description: `Automated bump of ${commitMessage}`,
+      description: `Automated merge request of ${commitMessage}`,
       reviewer_ids: [reviewers['cuong.nguyen']],
+      assignee_id: me.id,
     },
     {
       headers: {
