@@ -22,16 +22,14 @@ program
     console.log('Access token saved successfully!');
   });
 
-program
-  .name('bump')
-  .description('Bump a package version across multiple repositories')
-  .version('1.0.0');
-
 const invalidInputMessage =
   'Error: Please provide a valid package name and version in the format <package_name>@<package_version>';
 program
   .command('bump <package_name>@<package_version>')
-  .action((pkgVersion) => {
+  .description('Bump a package version across multiple repositories')
+  .version('1.0.0')
+  .option('--create-mr', 'Should create merge request')
+  .action((pkgVersion, options) => {
     const lastAtIndex = pkgVersion.lastIndexOf('@');
     if (lastAtIndex === -1) {
       console.error(invalidInputMessage);
@@ -46,7 +44,8 @@ program
       process.exit(1);
     }
 
-    updatePackageInRepos(packageName, version);
+    const shouldCreateMr = options.createMr;
+    updatePackageInRepos(packageName, version, shouldCreateMr);
   });
 
 program.parse();

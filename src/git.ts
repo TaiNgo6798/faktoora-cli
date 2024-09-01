@@ -25,12 +25,14 @@ export async function branchExists(
   }
 }
 
-export async function createAndCheckoutBranch(
-  localPath: string,
-  branchName: string,
-) {
+export async function checkoutBranch(localPath: string, branchName: string) {
   const git = simpleGit(localPath);
-  await git.checkoutLocalBranch(branchName);
+  const exists = await branchExists(localPath, branchName);
+  if (exists) {
+    await git.checkout(branchName);
+  } else {
+    await git.checkoutLocalBranch(branchName);
+  }
 }
 
 export async function commitToCurrenctBranch(

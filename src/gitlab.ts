@@ -5,16 +5,19 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import {
   cloneRepo,
-  createAndCheckoutBranch,
+  checkoutBranch,
   commitToCurrenctBranch,
   pushBranch,
-  branchExists,
 } from './git';
 import { DataObject } from './types';
 import { getGitlabToken } from './utils';
 
 const TEMP_REPO_DIR = '/tmp/faktoora-bump';
 const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
+
+const reviewers = {
+  'cuong.nguyen': '19',
+};
 
 export async function getRepositories() {
   const response = await axios.get(
@@ -41,6 +44,7 @@ export async function createMergeRequest(
       target_branch: repo.default_branch,
       title: commitMessage,
       description: `Automated bump of ${commitMessage}`,
+      reviewer_ids: [reviewers['cuong.nguyen']],
     },
     {
       headers: {
@@ -104,14 +108,16 @@ async function runNpmInstall(
 ) {
   execSync(`npm i ${packageName}@${version} --package-lock-only`, {
     cwd: localPath,
+    stdio: 'pipe',
   });
 }
 
 export async function updatePackageInRepos(
   packageName: string,
   version: string,
+  shouldCreateMr = false,
 ) {
-  console.log(`Finding repositories using the "${packageName}" ...`);
+  console.log(`Finding repositories using the "${packageName}"...`);
   const repos = await filterProjectByPackageName(packageName);
 
   if (!repos?.length) {
@@ -127,50 +133,50 @@ export async function updatePackageInRepos(
       choices: repos.map((repo) => ({
         name: `${repo.name}${repo.packageDetail.version.replace(/^[\^~]/, '') === version ? ' - up to date' : ''}`,
         value: repo,
-        // checked: true,
+        checked: true,
       })),
     },
   ] as any);
 
-  const localPaths = [];
+  const localPaths = [] as string[];
+  const commitMessage = `bump/${packageName}@${version}`;
+  const branchName = `bump/${packageName}-${version}`;
+
   if (existsSync(TEMP_REPO_DIR)) execSync(`rm -rf ${TEMP_REPO_DIR}`);
   try {
-    for (const repo of selectedRepos) {
-      const localPath = path.join(TEMP_REPO_DIR, repo.name);
-      localPaths.push(localPath);
+    await Promise.all(
+      selectedRepos.map(async (repo: DataObject) => {
+        const localPath = path.join(TEMP_REPO_DIR, repo.name);
+        localPaths.push(localPath);
 
-      console.log(`Cloning ${repo.ssh_url_to_repo}...`);
-      await cloneRepo(repo.ssh_url_to_repo, localPath);
+        console.log(`${repo.name}: Cloning ${repo.ssh_url_to_repo}...`);
+        await cloneRepo(repo.ssh_url_to_repo, localPath);
 
-      const branchName = `bump_${packageName}-${version}`;
-      const exists = await branchExists(localPath, branchName);
-      if (exists) {
-        console.warn(
-          `Branch "${branchName}" already exists in ${repo.name}.\nSkipping...`,
-        );
-        continue;
-      }
+        console.log(`${repo.name}: Creating branch "${branchName}"...`);
+        await checkoutBranch(localPath, branchName);
 
-      console.log(`Creating branch "${branchName}" ...`);
-      await createAndCheckoutBranch(localPath, branchName);
+        console.log(`${repo.name}: Installing ${packageName}@${version}...`);
+        await runNpmInstall(localPath, packageName, version);
 
-      console.log(`Installing ${packageName}@${version} ...`);
-      await runNpmInstall(localPath, packageName, version);
+        console.log(`${repo.name}: Committing changes...`);
+        await commitToCurrenctBranch(localPath, commitMessage);
 
-      console.log(`Committing changes...`);
-      await commitToCurrenctBranch(localPath, `Bump ${packageName}@${version}`);
+        console.log(`${repo.name}: Pushing changes...`);
+        await pushBranch(localPath, branchName);
 
-      console.log(`Pushing changes...`);
-      await pushBranch(localPath, branchName);
-      // await createMergeRequest(repo, branchName, `Bump ${packageName}@${version}`);
-    }
+        if (shouldCreateMr) {
+          console.log(`${repo.name}: Creating merge request...`);
+          await createMergeRequest(repo, branchName, commitMessage);
+        }
+      }),
+    );
 
     console.log(`Bump ${packageName}@${version} done!`);
   } catch (e) {
     console.error(e);
   } finally {
     console.log(`Cleaning up...`);
-    localPaths.forEach(
+    localPaths?.forEach(
       (localPath) => existsSync(localPath) && execSync(`rm -rf ${localPath}`),
     );
   }
