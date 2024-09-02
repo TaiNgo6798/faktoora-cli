@@ -68,7 +68,7 @@ export async function createMergeRequest(
 
 const filterProjectByPackageName = async (
   packageName: string,
-  branch: string = 'master',
+  branch?: string,
 ) => {
   const allRepos = await getRepositories();
   const ids = allRepos.map((repo: DataObject) => repo.id);
@@ -84,7 +84,7 @@ const filterProjectByPackageName = async (
     ids.map(async (id: string) => {
       try {
         const response = await axios.get(
-          `${GITLAB_API_BASE_URL}/projects/${id}/repository/files/package.json/raw?ref=${branch}`,
+          `${GITLAB_API_BASE_URL}/projects/${id}/repository/files/package.json/raw${branch ? `?ref=${branch}` : ''}`,
           {
             headers: {
               'PRIVATE-TOKEN': getGitlabToken(),
