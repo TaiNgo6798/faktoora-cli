@@ -32,11 +32,12 @@ faktoora bump <package_name>@<version>
 ### Options
 
 - `--create-mr`: Will create merge requests after bumping(default: false).
+- `--reviewer=<gitlab_user_name>`: Set reviewer for merge requests.
 
 ### Example
 
 ```bash
-faktoora bump @faktoora/faktoora-queue@1.24.5
+faktoora bump @faktoora/faktoora-queue@1.24.5 --create-mr --reviewer=cuong.nguyen
 ```
 
 ### Screenshots
