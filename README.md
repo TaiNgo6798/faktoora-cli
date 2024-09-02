@@ -33,6 +33,7 @@ faktoora bump <package_name>@<version>
 
 - `--create-mr`: Will create merge requests after bumping(default: false).
 - `--reviewer=<gitlab_user_name>`: Set reviewer for merge requests.
+- `-f, --force`: Force bump all found repos.
 
 ### Example
 

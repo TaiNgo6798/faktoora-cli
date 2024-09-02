@@ -141,8 +141,14 @@ async function runNpmInstall(
 export async function updatePackageInRepos(
   packageName: string,
   version: string,
-  shouldCreateMr = false,
-  reviewerName?: string,
+  options: {
+    shouldCreateMr: boolean;
+    reviewerName?: string;
+    applyToAll: boolean;
+  } = {
+    shouldCreateMr: false,
+    applyToAll: false,
+  },
 ) {
   console.log(`Finding repositories using the "${packageName}"...`);
   const repos = await filterProjectByPackageName(packageName);
@@ -152,18 +158,25 @@ export async function updatePackageInRepos(
     return;
   }
 
-  const { selectedRepos } = await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'selectedRepos',
-      message: 'Select repositories to update:',
-      choices: repos.map((repo) => ({
-        name: `${repo.name}${repo.packageDetail.version.replace(/^[\^~]/, '') === version ? ' - up to date' : ''}`,
-        value: repo,
-        checked: true,
-      })),
-    },
-  ] as any);
+  let selectedRepos;
+  if (options.applyToAll) {
+    selectedRepos = repos;
+  } else {
+    const promptResult = await inquirer.prompt([
+      {
+        type: 'checkbox',
+        name: 'selectedRepos',
+        message: 'Select repositories to update:',
+        choices: repos.map((repo) => ({
+          name: `${repo.name}${repo.packageDetail.version.replace(/^[\^~]/, '') === version ? ' - up to date' : ''}`,
+          value: repo,
+          checked: true,
+        })),
+      },
+    ] as any);
+
+    selectedRepos = promptResult.selectedRepos;
+  }
 
   const localPaths = [] as string[];
   const commitMessage = `bump/${packageName}@${version}`;
@@ -191,13 +204,13 @@ export async function updatePackageInRepos(
         console.log(`${repo.name}: Pushing changes...`);
         await pushBranch(localPath, branchName);
 
-        if (shouldCreateMr) {
+        if (options.shouldCreateMr) {
           console.log(`${repo.name}: Creating merge request...`);
           await createMergeRequest(
             repo,
             branchName,
             commitMessage,
-            reviewerName,
+            options.reviewerName,
           );
         }
       }),

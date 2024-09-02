@@ -30,6 +30,7 @@ program
   .version('1.0.0')
   .option('--create-mr', 'Should create merge request')
   .option('--reviewer <name>', 'Set MR reviewer')
+  .option('-f, --force', 'Force processing for all repositories')
   .action((pkgVersion, options) => {
     try {
       const lastAtIndex = pkgVersion.lastIndexOf('@');
@@ -48,7 +49,12 @@ program
 
       const shouldCreateMr = options?.createMr;
       const reviewerName = options?.reviewer;
-      updatePackageInRepos(packageName, version, shouldCreateMr, reviewerName);
+      const applyToAll = options?.force;
+      updatePackageInRepos(packageName, version, {
+        shouldCreateMr,
+        reviewerName,
+        applyToAll,
+      });
     } catch (error) {
       console.error(error);
       process.exit(1);
