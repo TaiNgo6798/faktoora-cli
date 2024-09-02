@@ -15,10 +15,6 @@ import { getGitlabToken } from './utils';
 const TEMP_REPO_DIR = '/tmp/faktoora-bump';
 const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
 
-const reviewers = {
-  'cuong.nguyen': '19',
-};
-
 export async function getRepositories() {
   const response = await axios.get(
     `${GITLAB_API_BASE_URL}/projects?membership=true&per_page=1000`,
@@ -41,23 +37,41 @@ export const getMe = async () => {
   return response.data as DataObject;
 };
 
+export const findUserByName = async (name: string) => {
+  const response = await axios.get(
+    `${GITLAB_API_BASE_URL}/users?search=${name}`,
+    {
+      headers: {
+        'PRIVATE-TOKEN': getGitlabToken(),
+      },
+    },
+  );
+  return response?.data?.[0] as DataObject;
+};
+
 export async function createMergeRequest(
   repo: DataObject,
   branch: string,
   commitMessage: string,
+  reviewerName?: string,
 ) {
   const me = await getMe();
+  const body: DataObject = {
+    source_branch: branch,
+    target_branch: repo.default_branch,
+    title: commitMessage,
+    description: `Automated merge request of ${commitMessage}`,
+    assignee_id: me.id,
+  };
+
+  if (reviewerName) {
+    const reviewer = await findUserByName(reviewerName);
+    body.reviewer_ids = [reviewer.id];
+  }
 
   await axios.post(
     `${GITLAB_API_BASE_URL}/projects/${repo.id}/merge_requests`,
-    {
-      source_branch: branch,
-      target_branch: repo.default_branch,
-      title: commitMessage,
-      description: `Automated merge request of ${commitMessage}`,
-      reviewer_ids: [reviewers['cuong.nguyen']],
-      assignee_id: me.id,
-    },
+    body,
     {
       headers: {
         'PRIVATE-TOKEN': getGitlabToken(),
@@ -128,6 +142,7 @@ export async function updatePackageInRepos(
   packageName: string,
   version: string,
   shouldCreateMr = false,
+  reviewerName?: string,
 ) {
   console.log(`Finding repositories using the "${packageName}"...`);
   const repos = await filterProjectByPackageName(packageName);
@@ -178,7 +193,12 @@ export async function updatePackageInRepos(
 
         if (shouldCreateMr) {
           console.log(`${repo.name}: Creating merge request...`);
-          await createMergeRequest(repo, branchName, commitMessage);
+          await createMergeRequest(
+            repo,
+            branchName,
+            commitMessage,
+            reviewerName,
+          );
         }
       }),
     );

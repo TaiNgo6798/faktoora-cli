@@ -29,23 +29,30 @@ program
   .description('Bump a package version across multiple repositories')
   .version('1.0.0')
   .option('--create-mr', 'Should create merge request')
+  .option('--reviewer <name>', 'Set MR reviewer')
   .action((pkgVersion, options) => {
-    const lastAtIndex = pkgVersion.lastIndexOf('@');
-    if (lastAtIndex === -1) {
-      console.error(invalidInputMessage);
+    try {
+      const lastAtIndex = pkgVersion.lastIndexOf('@');
+      if (lastAtIndex === -1) {
+        console.error(invalidInputMessage);
+        process.exit(1);
+      }
+
+      const packageName = pkgVersion.slice(0, lastAtIndex);
+      const version = pkgVersion.slice(lastAtIndex + 1);
+
+      if (!packageName || !version) {
+        console.error(invalidInputMessage);
+        process.exit(1);
+      }
+
+      const shouldCreateMr = options?.createMr;
+      const reviewerName = options?.reviewer;
+      updatePackageInRepos(packageName, version, shouldCreateMr, reviewerName);
+    } catch (error) {
+      console.error(error);
       process.exit(1);
     }
-
-    const packageName = pkgVersion.slice(0, lastAtIndex);
-    const version = pkgVersion.slice(lastAtIndex + 1);
-
-    if (!packageName || !version) {
-      console.error(invalidInputMessage);
-      process.exit(1);
-    }
-
-    const shouldCreateMr = options.createMr;
-    updatePackageInRepos(packageName, version, shouldCreateMr);
   });
 
 program.parse();
