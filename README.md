@@ -7,7 +7,10 @@ This CLI tool automates the process of bumping the version of a package across m
 You can install the CLI globally using npm:
 
 ```bash
-...
+cd faktoora-ci
+npm run build
+npm uninstall -g @faktoora/faktoora-cli // optional
+npm i -g .
 ```
 
 ## Usage
