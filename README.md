@@ -38,3 +38,13 @@ faktoora bump <package_name>@<version>
 ```bash
 faktoora bump @faktoora/faktoora-queue@1.24.5
 ```
+
+### Screenshots
+![TaiNgo 2024-09-02 at 12 43 13](https://github.com/user-attachments/assets/cc4c6f44-1d3c-415a-885e-d844dcb77399)
+
+
+![TaiNgo 2024-09-02 at 12 43 34](https://github.com/user-attachments/assets/1ff44ff2-fc6b-4a3d-9c8d-311b4303c22a)
+
+
+
+
