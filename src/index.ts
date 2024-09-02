@@ -12,9 +12,10 @@ program
   .action(async () => {
     const answers = await inquirer.prompt([
       {
-        type: 'input',
+        type: 'password',
         name: 'token',
         message: 'Enter your gitlab access token:',
+        mask: '*',
       },
     ] as any);
 
