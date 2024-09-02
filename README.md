@@ -47,6 +47,6 @@ faktoora bump @faktoora/faktoora-queue@1.24.5 --create-mr --reviewer=cuong.nguye
 
 ![TaiNgo 2024-09-02 at 12 43 34](https://github.com/user-attachments/assets/1ff44ff2-fc6b-4a3d-9c8d-311b4303c22a)
 
-
+[See demo video](https://drive.google.com/file/d/1-QsLonYS1pwBLBrCN-PptGNW1Mwj2l4A/view)
 
 
