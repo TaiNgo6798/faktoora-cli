@@ -35,11 +35,24 @@ export async function checkoutBranch(localPath: string, branchName: string) {
   }
 }
 
-export async function commitToCurrenctBranch(
+export async function checkStatus(localPath: string) {
+  const git = simpleGit(localPath);
+  const status = await git.status();
+  return status;
+}
+
+export async function commitToCurrentBranch(
   localPath: string,
   commitMessage: string,
 ) {
   const git = simpleGit(localPath);
+
+  // If there are no changes, return or log a message
+  const status = await git.status();
+  if (status.isClean()) {
+    return false;
+  }
+
   await git.add('.');
   await git.commit(commitMessage);
 }

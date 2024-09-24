@@ -6,8 +6,9 @@ import { existsSync } from 'fs';
 import {
   cloneRepo,
   checkoutBranch,
-  commitToCurrenctBranch,
+  commitToCurrentBranch,
   pushBranch,
+  checkStatus,
 } from './git';
 import { DataObject } from './types';
 import { getGitlabToken } from './utils';
@@ -198,8 +199,14 @@ export async function updatePackageInRepos(
         console.log(`${repo.name}: Installing ${packageName}@${version}...`);
         await runNpmInstall(localPath, packageName, version);
 
+        const gitStatus = await checkStatus(localPath);
+        if (gitStatus.isClean()) {
+          console.log(`${repo.name}: All are up to date...`);
+          return;
+        }
+
         console.log(`${repo.name}: Committing changes...`);
-        await commitToCurrenctBranch(localPath, commitMessage);
+        await commitToCurrentBranch(localPath, commitMessage);
 
         console.log(`${repo.name}: Pushing changes...`);
         await pushBranch(localPath, branchName);
