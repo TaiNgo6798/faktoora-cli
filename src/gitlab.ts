@@ -54,7 +54,7 @@ export async function createMergeRequest(
   repo: DataObject,
   branch: string,
   commitMessage: string,
-  reviewerName?: string,
+  reviewerName: string = 'cuong.nguyen',
 ) {
   const me = await getMe();
   const body: DataObject = {
