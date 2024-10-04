@@ -61,7 +61,7 @@ export async function createMergeRequest(
     source_branch: branch,
     target_branch: repo.default_branch,
     title: commitMessage,
-    description: `Automated merge request of ${commitMessage}`,
+    description: `Automated merge request of ${commitMessage}\nby faktoora-ci`,
     assignee_id: me.id,
   };
 
@@ -95,7 +95,7 @@ const filterProjectByPackageName = async (
     {},
   );
 
-  const projectsHasThePackage = await Promise.all(
+  const findProjectsHasThePackage = await Promise.all(
     ids.map(async (id: string) => {
       try {
         const response = await axios.get(
@@ -125,7 +125,7 @@ const filterProjectByPackageName = async (
     }),
   );
 
-  return projectsHasThePackage.filter((v) => !!v);
+  return findProjectsHasThePackage.filter((v) => !!v);
 };
 
 async function runNpmInstall(
