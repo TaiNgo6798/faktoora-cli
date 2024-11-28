@@ -134,7 +134,7 @@ async function runNpmInstall(
   version: string,
 ) {
   execSync(
-    `npm i ${packageName}@${version} -f --package-lock-only && npm i -f --package-lock-only`,
+    `npm i ${packageName}@${version} -f --package-lock-only && npm i -f`,
     {
       cwd: localPath,
       stdio: 'pipe',
