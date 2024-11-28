@@ -133,10 +133,13 @@ async function runNpmInstall(
   packageName: string,
   version: string,
 ) {
-  execSync(`npm i ${packageName}@${version} --package-lock-only`, {
-    cwd: localPath,
-    stdio: 'pipe',
-  });
+  execSync(
+    `npm i ${packageName}@${version} --package-lock-only && npm i --package-lock-only`,
+    {
+      cwd: localPath,
+      stdio: 'pipe',
+    },
+  );
 }
 
 export async function updatePackageInRepos(
