@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { homedir } from 'os';
+import path from 'path';
 
 const findNvmScript = () => {
   const possiblePaths = [
@@ -22,8 +23,13 @@ export const runNpmInstall = async (
     throw new Error('Could not find nvm.sh. Is nvm installed?');
   }
 
+  const nvmrcPath = path.join(localPath, '.nvmrc');
+  const nodeVersionCommand = existsSync(nvmrcPath)
+    ? `. ${nvmInitScript} && nvm use &&`
+    : '';
+
   execSync(
-    `. ${nvmInitScript} && nvm use && npm i ${packageName}@${version} -f --package-lock-only`,
+    `${nodeVersionCommand} npm i ${packageName}@${version} -f --package-lock-only`,
     {
       cwd: localPath,
     },
