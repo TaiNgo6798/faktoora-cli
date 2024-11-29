@@ -62,7 +62,7 @@ export async function createMergeRequest(
     source_branch: branch,
     target_branch: repo.default_branch,
     title: commitMessage,
-    description: `Automated merge request of ${commitMessage}\nby faktoora-ci`,
+    description: `Merge request for ${commitMessage}\nby faktoora-cli`,
     assignee_id: me.id,
   };
 
