@@ -12,6 +12,7 @@ import {
 } from './git';
 import { DataObject } from './types';
 import { getGitlabToken } from './utils';
+import { runNpmInstall } from './npm-commands';
 
 const TEMP_REPO_DIR = '/tmp/faktoora-bump';
 const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
@@ -128,20 +129,6 @@ const filterProjectByPackageName = async (
   return findProjectsHasThePackage.filter((v) => !!v);
 };
 
-async function runNpmInstall(
-  localPath: string,
-  packageName: string,
-  version: string,
-) {
-  execSync(
-    `npm i ${packageName}@${version} -f --package-lock-only && npm i -f`,
-    {
-      cwd: localPath,
-      stdio: 'pipe',
-    },
-  );
-}
-
 export async function updatePackageInRepos(
   packageName: string,
   version: string,
@@ -227,8 +214,6 @@ export async function updatePackageInRepos(
     );
 
     console.log(`Bump ${packageName}@${version} done!`);
-  } catch (e) {
-    console.error(e);
   } finally {
     console.log(`Cleaning up...`);
     localPaths?.forEach(
