@@ -4,6 +4,8 @@ This CLI tool automates the process of bumping the version of a package across m
 
 ## Installation
 
+Note: It requires nvm to run.
+
 You can install the CLI globally using npm:
 
 ```bash
