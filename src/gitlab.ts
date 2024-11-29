@@ -170,8 +170,9 @@ export async function updatePackageInRepos(
   }
 
   const localPaths = [] as string[];
-  const commitMessage = `bump/${packageName}@${version}`;
-  const branchName = `bump/${packageName}-${version}`;
+  const shortPackageName = packageName.split('/').pop();
+  const commitMessage = `bump/${shortPackageName}@${version}`;
+  const branchName = `bump/${shortPackageName}-${version}`;
 
   if (existsSync(TEMP_REPO_DIR)) execSync(`rm -rf ${TEMP_REPO_DIR}`);
   try {
