@@ -2,9 +2,14 @@
 
 This CLI tool automates the process of bumping the version of a package across multiple GitLab projects. It updates the version in your `package.json` (or similar) files, commits the changes, and create merge requests with your credential.
 
-## Installation
+```bash
+Note: 
+- It requires to have nvm installed to run.
+- .nvmrc file in the repo is supported.
 
-Note: It requires nvm to run.
+```
+
+## Installation
 
 You can install the CLI globally using npm:
 
