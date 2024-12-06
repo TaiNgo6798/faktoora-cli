@@ -12,7 +12,7 @@ import {
 } from './git';
 import { BumpOptions, DataObject } from './types';
 import { getGitlabToken } from './token';
-import { runNpmInstall } from './npm-commands';
+import { runNpmInstall } from './npm.command';
 import config from './config';
 
 export async function getRepositories() {
