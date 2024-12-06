@@ -13,6 +13,7 @@ import {
 import { DataObject } from './types';
 import { getGitlabToken } from './utils';
 import { runNpmInstall } from './npm-commands';
+import { DEFAULT_MERGE_REQUEST_DESCRIPTION } from './const';
 
 const TEMP_REPO_DIR = '/tmp/faktoora-bump';
 const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
@@ -62,7 +63,7 @@ export async function createMergeRequest(
     source_branch: branch,
     target_branch: repo.default_branch,
     title: commitMessage,
-    description: `Merge request for ${commitMessage}\nby faktoora-cli`,
+    description: DEFAULT_MERGE_REQUEST_DESCRIPTION,
     assignee_id: me.id,
   };
 
@@ -136,6 +137,8 @@ export async function updatePackageInRepos(
     shouldCreateMr: boolean;
     reviewerName?: string;
     applyToAll: boolean;
+    branchName?: string;
+    destinationBranch?: string;
   } = {
     shouldCreateMr: false,
     applyToAll: false,
@@ -172,11 +175,12 @@ export async function updatePackageInRepos(
   const localPaths = [] as string[];
   const shortPackageName = packageName.split('/').pop();
   const commitMessage = `bump/${shortPackageName}@${version}`;
-  const branchName = `bump/${shortPackageName}-${version}`;
+  const defaultBranchName = `bump/${shortPackageName}-${version}`;
+  const branchName = options.branchName || defaultBranchName;
 
   if (existsSync(TEMP_REPO_DIR)) execSync(`rm -rf ${TEMP_REPO_DIR}`);
   try {
-    await Promise.all(
+    const results = await Promise.all(
       selectedRepos.map(async (repo: DataObject) => {
         const localPath = path.join(TEMP_REPO_DIR, repo.name);
         localPaths.push(localPath);
@@ -199,22 +203,36 @@ export async function updatePackageInRepos(
         console.log(`${repo.name}: Committing changes...`);
         await commitToCurrentBranch(localPath, commitMessage);
 
-        console.log(`${repo.name}: Pushing changes...`);
-        await pushBranch(localPath, branchName);
+        return {
+          repo,
+          localPath,
+        };
+      }),
+    );
 
-        if (options.shouldCreateMr) {
-          console.log(`${repo.name}: Creating merge request...`);
-          await createMergeRequest(
-            repo,
-            branchName,
-            commitMessage,
-            options.reviewerName,
-          );
+    await Promise.all(
+      results.map(async (result) => {
+        if (result) {
+          const { repo, localPath } = result;
+          console.log(`${repo.name}: Pushing changes...`);
+          await pushBranch(localPath, branchName);
+
+          if (options.shouldCreateMr) {
+            console.log(`${repo.name}: Creating merge request...`);
+            await createMergeRequest(
+              repo,
+              branchName,
+              commitMessage,
+              options.reviewerName,
+            );
+          }
         }
       }),
     );
 
     console.log(`Bump ${packageName}@${version} done!`);
+  } catch (e) {
+    console.error(e.message);
   } finally {
     console.log(`Cleaning up...`);
     localPaths?.forEach(

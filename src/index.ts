@@ -32,6 +32,11 @@ program
   .option('--create-mr', 'Should create merge request')
   .option('--reviewer <name>', 'Set MR reviewer')
   .option('-f, --force', 'Force processing for all repositories')
+  .option('--branch <name>', 'Branch name')
+  .option(
+    '--destination <name>',
+    'Destination branch name to create merge request to',
+  )
   .action((pkgVersion, options) => {
     try {
       const lastAtIndex = pkgVersion.lastIndexOf('@');
@@ -51,13 +56,17 @@ program
       const shouldCreateMr = options?.createMr;
       const reviewerName = options?.reviewer;
       const applyToAll = options?.force;
+      const branchName = options?.branch;
+      const destinationBranch = options?.destination;
       updatePackageInRepos(packageName, version, {
         shouldCreateMr,
         reviewerName,
         applyToAll,
+        branchName,
+        destinationBranch,
       });
     } catch (error) {
-      console.error(error);
+      console.error(error.message);
       process.exit(1);
     }
   });

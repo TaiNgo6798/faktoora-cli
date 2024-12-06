@@ -1,0 +1,1 @@
+export const DEFAULT_MERGE_REQUEST_DESCRIPTION = ``;
