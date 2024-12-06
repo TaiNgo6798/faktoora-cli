@@ -3,7 +3,8 @@
 import { Command } from 'commander';
 import { updatePackageInRepos } from './gitlab';
 import inquirer from 'inquirer';
-import { saveToken } from './utils';
+import { saveToken } from './token';
+import { CommandOptions } from './types';
 const program = new Command();
 
 program
@@ -35,9 +36,9 @@ program
   .option('--branch <name>', 'Branch name')
   .option(
     '--destination <name>',
-    'Destination branch name to create merge request to',
+    'Destination branch name for creating merge request',
   )
-  .action((pkgVersion, options) => {
+  .action((pkgVersion: string, options: CommandOptions) => {
     try {
       const lastAtIndex = pkgVersion.lastIndexOf('@');
       if (lastAtIndex === -1) {
@@ -53,11 +54,14 @@ program
         process.exit(1);
       }
 
-      const shouldCreateMr = options?.createMr;
-      const reviewerName = options?.reviewer;
-      const applyToAll = options?.force;
-      const branchName = options?.branch;
-      const destinationBranch = options?.destination;
+      const {
+        createMr: shouldCreateMr,
+        reviewer: reviewerName,
+        force: applyToAll,
+        branch: branchName,
+        destination: destinationBranch,
+      } = options;
+
       updatePackageInRepos(packageName, version, {
         shouldCreateMr,
         reviewerName,

@@ -10,17 +10,14 @@ import {
   pushBranch,
   checkStatus,
 } from './git';
-import { DataObject } from './types';
-import { getGitlabToken } from './utils';
+import { BumpOptions, DataObject } from './types';
+import { getGitlabToken } from './token';
 import { runNpmInstall } from './npm-commands';
-import { DEFAULT_MERGE_REQUEST_DESCRIPTION } from './const';
-
-const TEMP_REPO_DIR = '/tmp/faktoora-bump';
-const GITLAB_API_BASE_URL = 'https://git.storyx.company/api/v4';
+import config from './config';
 
 export async function getRepositories() {
   const response = await axios.get(
-    `${GITLAB_API_BASE_URL}/projects?membership=true&per_page=1000`,
+    `${config.GITLAB_API_BASE_URL}/projects?membership=true&per_page=1000`,
     {
       headers: {
         'PRIVATE-TOKEN': getGitlabToken(),
@@ -32,7 +29,7 @@ export async function getRepositories() {
 }
 
 export const getMe = async () => {
-  const response = await axios.get(`${GITLAB_API_BASE_URL}/user`, {
+  const response = await axios.get(`${config.GITLAB_API_BASE_URL}/user`, {
     headers: {
       'PRIVATE-TOKEN': getGitlabToken(),
     },
@@ -42,7 +39,7 @@ export const getMe = async () => {
 
 export const findUserByName = async (name: string) => {
   const response = await axios.get(
-    `${GITLAB_API_BASE_URL}/users?search=${name}`,
+    `${config.GITLAB_API_BASE_URL}/users?search=${name}`,
     {
       headers: {
         'PRIVATE-TOKEN': getGitlabToken(),
@@ -63,7 +60,7 @@ export async function createMergeRequest(
     source_branch: branch,
     target_branch: repo.default_branch,
     title: commitMessage,
-    description: DEFAULT_MERGE_REQUEST_DESCRIPTION,
+    description: config.DEFAULT_MERGE_REQUEST_DESCRIPTION,
     assignee_id: me.id,
   };
 
@@ -73,7 +70,7 @@ export async function createMergeRequest(
   }
 
   await axios.post(
-    `${GITLAB_API_BASE_URL}/projects/${repo.id}/merge_requests`,
+    `${config.GITLAB_API_BASE_URL}/projects/${repo.id}/merge_requests`,
     body,
     {
       headers: {
@@ -101,7 +98,7 @@ const filterProjectByPackageName = async (
     ids.map(async (id: string) => {
       try {
         const response = await axios.get(
-          `${GITLAB_API_BASE_URL}/projects/${id}/repository/files/package.json/raw${branch ? `?ref=${branch}` : ''}`,
+          `${config.GITLAB_API_BASE_URL}/projects/${id}/repository/files/package.json/raw${branch ? `?ref=${branch}` : ''}`,
           {
             headers: {
               'PRIVATE-TOKEN': getGitlabToken(),
@@ -133,13 +130,7 @@ const filterProjectByPackageName = async (
 export async function updatePackageInRepos(
   packageName: string,
   version: string,
-  options: {
-    shouldCreateMr: boolean;
-    reviewerName?: string;
-    applyToAll: boolean;
-    branchName?: string;
-    destinationBranch?: string;
-  } = {
+  options: BumpOptions = {
     shouldCreateMr: false,
     applyToAll: false,
   },
@@ -178,11 +169,12 @@ export async function updatePackageInRepos(
   const defaultBranchName = `bump/${shortPackageName}-${version}`;
   const branchName = options.branchName || defaultBranchName;
 
-  if (existsSync(TEMP_REPO_DIR)) execSync(`rm -rf ${TEMP_REPO_DIR}`);
+  if (existsSync(config.TEMP_REPO_DIR))
+    execSync(`rm -rf ${config.TEMP_REPO_DIR}`);
   try {
     const results = await Promise.all(
       selectedRepos.map(async (repo: DataObject) => {
-        const localPath = path.join(TEMP_REPO_DIR, repo.name);
+        const localPath = path.join(config.TEMP_REPO_DIR, repo.name);
         localPaths.push(localPath);
 
         console.log(`${repo.name}: Cloning ${repo.ssh_url_to_repo}...`);

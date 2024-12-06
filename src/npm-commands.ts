@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { homedir } from 'os';
 import path from 'path';
 
-const findNvmScript = () => {
+const findNvmPath = () => {
   const possiblePaths = [
     `${homedir()}/.nvm/nvm.sh`,
     '/usr/local/nvm/nvm.sh',
@@ -18,14 +18,14 @@ export const runNpmInstall = async (
   packageName: string,
   version: string,
 ) => {
-  const nvmInitScript = findNvmScript();
-  if (!nvmInitScript) {
+  const nvmPath = findNvmPath();
+  if (!nvmPath) {
     throw new Error('Could not find nvm.sh. Is nvm installed?');
   }
 
   const nvmrcPath = path.join(localPath, '.nvmrc');
   const nodeVersionCommand = existsSync(nvmrcPath)
-    ? `. ${nvmInitScript} && nvm use &&`
+    ? `. ${nvmPath} && nvm use &&`
     : '';
 
   execSync(
