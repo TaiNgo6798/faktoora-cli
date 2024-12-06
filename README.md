@@ -4,7 +4,7 @@ This CLI tool automates the process of bumping the version of a package across m
 
 ```bash
 Note: 
-- It requires to have nvm installed to run.
+- It requires having nvm installed to run.
 - .nvmrc file in the repo is supported.
 
 ```
@@ -38,6 +38,8 @@ faktoora bump <package_name>@<version>
 
 ### Options
 
+- `--branch`: Basically it will install the package in a new branch, and you can set its name.
+- `--destination`: Destination branch's name to create Merge Request.
 - `--create-mr`: Will create merge requests after bumping(default: false).
 - `--reviewer=<gitlab_user_name>`: Set reviewer for merge requests(default: cuong.nguyen).
 - `-f, --force`: Force bump all found repos.
