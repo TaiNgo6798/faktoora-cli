@@ -5,8 +5,8 @@ This CLI tool automates the process of bumping the version of a package across m
 ```bash
 Note:
 - Requires pre-installed GIT(of course)
-- It requires having nvm installed to run.
-- .nvmrc file in the repo is supported.
+- Requires pre-installed NVM - to handling many node versions of different repo - default: current global node version
+- .nvmrc file in each repo(optional) for NVM
 
 ```
 
