@@ -5,7 +5,7 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import {
   cloneRepo,
-  checkoutBranch,
+  createBranch,
   commitToCurrentBranch,
   pushBranch,
   checkStatus,
@@ -182,7 +182,7 @@ export async function updatePackageInRepos(
         await cloneRepo(repo.ssh_url_to_repo, localPath);
 
         console.log(`${repo.name}: Creating branch "${branchName}"...`);
-        await checkoutBranch(localPath, branchName);
+        await createBranch(localPath, branchName, options.destinationBranch);
 
         console.log(`${repo.name}: Installing ${packageName}@${version}...`);
         await runNpmInstall(localPath, packageName, version);
