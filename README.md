@@ -3,9 +3,10 @@
 This CLI tool automates the process of bumping the version of a package across multiple GitLab projects. It updates the version in your `package.json` (or similar) files, commits the changes, and create merge requests with your credential.
 
 ```bash
-Note: 
-- It requires having nvm installed to run.
-- .nvmrc file in the repo is supported.
+Note:
+- Requires pre-installed GIT(of course)
+- Requires pre-installed NVM - to handling many node versions of different repo - default: current global node version
+- .nvmrc file in each repo(optional) for NVM
 
 ```
 
@@ -42,12 +43,12 @@ faktoora bump <package_name>@<version>
 - `--destination=<name>`: Destination branch's name to create Merge Request.
 - `--create-mr`: Will create merge requests after bumping(default: false).
 - `--reviewer=<gitlab_user_name>`: Set reviewer for merge requests(default: cuong.nguyen).
-- `-f, --force`: Force bump all found repos.
+- `-f, --force`: Force bump all found repos - no selecting repo prompt
 
 ### Example
 
 ```bash
-faktoora bump @faktoora/faktoora-queue@1.24.5 --create-mr --reviewer=cuong.nguyen
+faktoora bump @faktoora/faktoora-queue@1.24.5 --create-mr --reviewer=cuong.nguyen --destination=dev1 --branch=my-feat-branch-name
 ```
 
 ### Screenshots
