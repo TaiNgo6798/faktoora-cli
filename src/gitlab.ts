@@ -54,11 +54,12 @@ export async function createMergeRequest(
   branch: string,
   commitMessage: string,
   reviewerName: string = 'cuong.nguyen',
+  destinationBranch: string = null,
 ) {
   const me = await getMe();
   const body: DataObject = {
     source_branch: branch,
-    target_branch: repo.default_branch,
+    target_branch: destinationBranch || repo.default_branch,
     title: commitMessage,
     description: config.DEFAULT_MERGE_REQUEST_DESCRIPTION,
     assignee_id: me.id,
@@ -216,6 +217,7 @@ export async function updatePackageInRepos(
               branchName,
               commitMessage,
               options.reviewerName,
+              options.destinationBranch,
             );
           }
         }
