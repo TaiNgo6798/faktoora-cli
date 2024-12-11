@@ -144,8 +144,16 @@ export async function updatePackageInRepos(
     return;
   }
 
+  const {
+    applyToAll,
+    destinationBranch,
+    shouldCreateMr,
+    reviewerName,
+    branchName,
+  } = options;
+
   let selectedRepos;
-  if (options.applyToAll) {
+  if (applyToAll) {
     selectedRepos = repos;
   } else {
     const promptResult = await inquirer.prompt([
@@ -168,7 +176,8 @@ export async function updatePackageInRepos(
   const shortPackageName = packageName.split('/').pop();
   const commitMessage = `bump/${shortPackageName}@${version}`;
   const defaultBranchName = `bump/${shortPackageName}-${version}`;
-  const branchName = options.branchName || defaultBranchName;
+  const preFix = destinationBranch ? `${destinationBranch}_` : '';
+  const branchNameWithPrefix = `${preFix}${branchName || defaultBranchName}`;
 
   if (existsSync(config.TEMP_REPO_DIR))
     execSync(`rm -rf ${config.TEMP_REPO_DIR}`);
@@ -181,8 +190,10 @@ export async function updatePackageInRepos(
         console.log(`${repo.name}: Cloning ${repo.ssh_url_to_repo}...`);
         await cloneRepo(repo.ssh_url_to_repo, localPath);
 
-        console.log(`${repo.name}: Creating branch "${branchName}"...`);
-        await createBranch(localPath, branchName, options.destinationBranch);
+        console.log(
+          `${repo.name}: Creating branch "${branchNameWithPrefix}"...`,
+        );
+        await createBranch(localPath, branchNameWithPrefix, destinationBranch);
 
         console.log(`${repo.name}: Installing ${packageName}@${version}...`);
         await runNpmInstall(localPath, packageName, version);
@@ -208,16 +219,16 @@ export async function updatePackageInRepos(
         if (result) {
           const { repo, localPath } = result;
           console.log(`${repo.name}: Pushing changes...`);
-          await pushBranch(localPath, branchName);
+          await pushBranch(localPath, branchNameWithPrefix);
 
-          if (options.shouldCreateMr) {
+          if (shouldCreateMr) {
             console.log(`${repo.name}: Creating merge request...`);
             await createMergeRequest(
               repo,
-              branchName,
+              branchNameWithPrefix,
               commitMessage,
-              options.reviewerName,
-              options.destinationBranch,
+              reviewerName,
+              destinationBranch,
             );
           }
         }
