@@ -51,16 +51,15 @@ export const findUserByName = async (name: string) => {
 
 export async function createMergeRequest(
   repo: DataObject,
-  branch: string,
-  commitMessage: string,
+  sourceBranch: string,
   reviewerName: string = 'cuong.nguyen',
   destinationBranch: string = null,
 ) {
   const me = await getMe();
   const body: DataObject = {
-    source_branch: branch,
+    source_branch: sourceBranch,
     target_branch: destinationBranch || repo.default_branch,
-    title: commitMessage,
+    title: sourceBranch,
     description: config.DEFAULT_MERGE_REQUEST_DESCRIPTION,
     assignee_id: me.id,
   };
@@ -226,7 +225,6 @@ export async function updatePackageInRepos(
             await createMergeRequest(
               repo,
               branchNameWithPrefix,
-              commitMessage,
               reviewerName,
               destinationBranch,
             );
