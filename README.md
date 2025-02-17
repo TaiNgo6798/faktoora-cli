@@ -18,7 +18,8 @@ You can install the CLI globally using npm:
 cd faktoora-ci
 npm run build
 npm uninstall -g @faktoora/faktoora-cli // optional
-npm i -g .
+npm i -g . --no-cache
+npm run postinstall
 ```
 
 ## Usage
@@ -29,16 +30,12 @@ To set your Gitlab access-token:
 
 ```bash
 faktoora set-token
-or 
-npx faktoora set-token
 ```
 
 To bump version of a package:
 
 ```bash
 faktoora bump <package_name>@<version>
-or 
-npx faktoora bump <package_name>@<version>
 ```
 
 ### Options
@@ -53,8 +50,6 @@ npx faktoora bump <package_name>@<version>
 
 ```bash
 faktoora bump @faktoora/faktoora-queue@1.24.5 --create-mr --reviewer=cuong.nguyen --destination=dev1 --branch=my-feat-branch-name
-or
-npx faktoora bump @faktoora/faktoora-queue@1.24.5 --create-mr --reviewer=cuong.nguyen --destination=dev1 --branch=my-feat-branch-name
 ```
 
 ### Screenshots
