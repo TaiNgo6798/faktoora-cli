@@ -1,6 +1,6 @@
 {
   "name": "@faktoora/faktoora-cli",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "bin": {
     "faktoora": "dist/index.js"
   },
@@ -16,7 +16,8 @@
     "test": "jest --no-cache --forceExit",
     "clean": "rimraf coverage dist tmp",
     "copy-files": "copyfiles -u 1 -s 'src/**/!(*.ts|*.js|*.map|*.mjs)' dist",
-    "build": "npm run lint-fix && npm run clean && tsc -p tsconfig.json && npm run copy-files"
+    "build": "npm run lint-fix && npm run clean && tsc -p tsconfig.json && npm run copy-files",
+    "postinstall": "chmod +x dist/index.js"
   },
   "dependencies": {
     "axios": "^1.7.5",
