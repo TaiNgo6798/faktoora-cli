@@ -41,7 +41,8 @@ faktoora bump <package_name>@<version>
 ### Options
 
 - `--branch=<name>`: Basically it will install the package in a new branch, and you can set its name.
-- `--destination=<name>`: Destination branch's name to create Merge Request.
+- `--destination=<name>`: Destination branch's name to create Merge Request. 
+Default: `master`, CAUTION: It will clone the repo from the destination branch.
 - `--create-mr`: Will create merge requests after bumping(default: false).
 - `--reviewer=<gitlab_user_name>`: Set reviewer for merge requests(default: cuong.nguyen).
 - `-f, --force`: Force bump all found repos - no selecting repo prompt
