@@ -15,7 +15,7 @@ Note:
 You can install the CLI globally using npm:
 
 ```bash
-cd faktoora-ci
+cd faktoora-cli
 npm run build
 npm uninstall -g @faktoora/faktoora-cli // optional
 npm i -g . --no-cache

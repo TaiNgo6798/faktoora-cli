@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import { updatePackageInRepos } from './gitlab';
 import inquirer from 'inquirer';
-import { saveToken } from './token';
+import { saveToken } from './credential';
 import { CommandOptions } from './types';
 const program = new Command();
 

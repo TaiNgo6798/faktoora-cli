@@ -11,13 +11,14 @@ import {
   checkStatus,
 } from './git';
 import { BumpOptions, DataObject } from './types';
-import { getGitlabToken } from './token';
+import { getApiBaseUrl, getGitlabToken } from './credential';
 import { runNpmInstall } from './npm.command';
 import config from './config';
 
 export async function getRepositories() {
+  const apiBaseUrl = getApiBaseUrl();
   const response = await axios.get(
-    `${config.GITLAB_API_BASE_URL}/projects?membership=true&per_page=1000`,
+    `${apiBaseUrl}/projects?membership=true&per_page=1000`,
     {
       headers: {
         'PRIVATE-TOKEN': getGitlabToken(),
@@ -29,7 +30,8 @@ export async function getRepositories() {
 }
 
 export const getMe = async () => {
-  const response = await axios.get(`${config.GITLAB_API_BASE_URL}/user`, {
+  const apiBaseUrl = getApiBaseUrl();
+  const response = await axios.get(`${apiBaseUrl}/user`, {
     headers: {
       'PRIVATE-TOKEN': getGitlabToken(),
     },
@@ -38,14 +40,12 @@ export const getMe = async () => {
 };
 
 export const findUserByName = async (name: string) => {
-  const response = await axios.get(
-    `${config.GITLAB_API_BASE_URL}/users?search=${name}`,
-    {
-      headers: {
-        'PRIVATE-TOKEN': getGitlabToken(),
-      },
+  const apiBaseUrl = getApiBaseUrl();
+  const response = await axios.get(`${apiBaseUrl}/users?search=${name}`, {
+    headers: {
+      'PRIVATE-TOKEN': getGitlabToken(),
     },
-  );
+  });
   return response?.data?.[0] as DataObject;
 };
 
@@ -69,15 +69,12 @@ export async function createMergeRequest(
     body.reviewer_ids = [reviewer.id];
   }
 
-  await axios.post(
-    `${config.GITLAB_API_BASE_URL}/projects/${repo.id}/merge_requests`,
-    body,
-    {
-      headers: {
-        'PRIVATE-TOKEN': getGitlabToken(),
-      },
+  const apiBaseUrl = getApiBaseUrl();
+  await axios.post(`${apiBaseUrl}/projects/${repo.id}/merge_requests`, body, {
+    headers: {
+      'PRIVATE-TOKEN': getGitlabToken(),
     },
-  );
+  });
 }
 
 const filterProjectByPackageName = async (
@@ -97,8 +94,9 @@ const filterProjectByPackageName = async (
   const findProjectsHasThePackage = await Promise.all(
     ids.map(async (id: string) => {
       try {
+        const apiBaseUrl = getApiBaseUrl();
         const response = await axios.get(
-          `${config.GITLAB_API_BASE_URL}/projects/${id}/repository/files/package.json/raw${branch ? `?ref=${branch}` : ''}`,
+          `${apiBaseUrl}/projects/${id}/repository/files/package.json/raw${branch ? `?ref=${branch}` : ''}`,
           {
             headers: {
               'PRIVATE-TOKEN': getGitlabToken(),
